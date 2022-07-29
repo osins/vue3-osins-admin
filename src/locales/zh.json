@@ -1,0 +1,17 @@
+{
+    "entity": {
+        "bank": {
+            "id": "编号",
+            "name": "银行名称",
+            "recommandTag": "推荐",
+            "settlementMethod": "结算方式",
+            "orderType": "报单方式",
+            "logo": "Logo",
+            "min": "最低起兑",
+            "serviceNumber": "微信服务号",
+            "allowApplyOrder": "兑换次数",
+            "queryMethod": "积分查询方法",
+            "memo": "银行简介"
+        }
+    }
+}
