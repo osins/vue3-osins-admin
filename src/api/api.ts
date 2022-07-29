@@ -33,6 +33,7 @@ export const client = (options: ClientOptions): [state: any, load: (options?: Lo
 
   const state = reactive({
     data: [],
+    loaded: false
   })
 
   const load = (options?: LoadOptions) => {
@@ -59,6 +60,7 @@ export const client = (options: ClientOptions): [state: any, load: (options?: Lo
         state.data = dataFormat(res.data)
       } else {
         state.data = res.data
+        state.loaded = true
       }
     })
   }

@@ -8,12 +8,12 @@
     </el-form-item>
     <el-form-item :label="t('entity.bank.settlementMethod')">
       <fbe-radio-group
-        :selected="state.data.settlementMethod"
+        v-model:selected="state.data.settlementMethod"
         :options="settlementMethods"
       />
     </el-form-item>
     <el-form-item :label="t('entity.bank.orderType')">
-      <fbe-radio-group :selected="state.data.orderType" :options="orderTypes" />
+      <fbe-radio-group v-model:selected="state.data.orderType" :options="orderTypes" />
     </el-form-item>
     <el-form-item :label="t('entity.bank.logo')">
       <el-image :src="state.data.logo" />
@@ -47,6 +47,7 @@
             'undo redo | formatselect | bold italic backcolor | \
            alignleft aligncenter alignright alignjustify | \
            bullist numlist outdent indent | image | removeformat | help',
+          images_upload_handler: imageUploadHandler,
         }"
         v-model="state.data.memo"
       />
@@ -63,7 +64,7 @@ import { useI18n } from "vue-i18n";
 import Editor from "@tinymce/tinymce-vue";
 import { useRoute } from "vue-router";
 import { detail } from "../api/bank.api";
-import { settlementMethods, orderTypes } from "../constants/settings";
+import { settlementMethods, orderTypes, uploadSettings } from "../constants/settings";
 const { locale, t } = useI18n({
   inheritLocale: true,
   useScope: "global",
@@ -93,4 +94,68 @@ const formater = (val: string) => {
 const onSubmit = () => {
   console.log(state.data);
 };
+
+const imageUploadHandler = (blobInfo: any, progress: any) =>
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = false;
+    xhr.open("POST", "http://127.0.0.1:8083/api/v1/upload/chunks");
+
+    xhr.setRequestHeader(
+      "x-fbe-token",
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOlwiYWNjZmRlN2EtNTdlOC00ZjQxLTg5MjMtNzJmY2U4MmJiZjRlXCIsXCJ1c2VybmFtZVwiOlwidGVzdFwiLFwiZW1haWxcIjpcInRlc3RAcXEuY29tXCIsXCJtb2JpbGVcIjpcIjE4MTAxODQ1NTM4XCIsXCJjcmVhdGVkQXRcIjpudWxsLFwidG9rZW5UeXBlXCI6XCJBQ0NFU1NcIn0iLCJuYmYiOjE2NTg5ODE3OTMsImV4cCI6MTY1OTI0MDk5MywiaWF0IjoxNjU4OTgxNzkzLCJqdGkiOiIxMjEwODcyMC05ZmVmLTQ4OTAtOTExNS03MDU1MzJjNzFhYWEifQ.b6f-eqHptCfo4C4u6v2dik6It0nh3JFJZZY7yZiWO4Y"
+    );
+
+    xhr.upload.onprogress = (e) => {
+      progress((e.loaded / e.total) * 100);
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 403) {
+        reject({ message: "HTTP Error: " + xhr.status, remove: true });
+        return;
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject("HTTP Error: " + xhr.status);
+        return;
+      }
+
+      console.log("responseText: ", xhr.responseText);
+
+      try {
+        const json = JSON.parse(xhr.responseText);
+
+        if (!json || typeof json.location != "string") {
+          // reject("Invalid JSON: " + xhr.responseText);
+          resolve(uploadSettings.default_img_url);
+          return;
+        }
+
+        console.log("respone json object: ", json);
+        console.log("respone json location: ", json.location);
+        resolve(json.location);
+        return;
+      } catch (e) {
+        console.log("upload error:", e);
+      }
+
+      console.log("upload complete: {}", uploadSettings.default_img_url);
+      resolve(uploadSettings.default_img_url);
+    };
+
+    xhr.onerror = () => {
+      reject("Image upload failed due to a XHR Transport error. Code: " + xhr.status);
+    };
+
+    const formData = new FormData();
+    formData.append("file", blobInfo.blob(), blobInfo.filename());
+    formData.append("name", blobInfo.filename());
+    formData.append("chunks", "1");
+    formData.append("chunk", "1");
+
+    console.log("upload form data: ", formData);
+
+    xhr.send(formData);
+  });
 </script>

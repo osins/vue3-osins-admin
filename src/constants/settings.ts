@@ -29,3 +29,8 @@ export const lastNames = "王、李、张、刘、陈、杨、黄、赵、吴、
 export const settlementMethods = ["自动秒结", "快消"]
 export const recommandTag = ["", "推荐"]
 export const orderTypes = ["自助报单", "客服协助"]
+
+export const uploadSettings = {
+  default_img_url:
+    "http://localhost:3200/assets/ads/0.webp",
+}
